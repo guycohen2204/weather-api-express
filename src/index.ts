@@ -17,7 +17,6 @@ app.get('/test', (req: Request, res: Response) => {
 
 app.get('/current/:city', async (req: Request, res: Response) => {
 	try {
-
         const cityName: string = req.params.city;
         
         const response = await fetch(
@@ -57,6 +56,27 @@ app.get('/current/:city', async (req: Request, res: Response) => {
         res.sendStatus(500).send({ error: 'Something bad happened' })
     }
 });
+
+app.get('/autocomplete/:city', async (req: Request, res: Response) => {
+    try {
+        const value: string = req.params.city;
+
+        const response = await fetch(`${ENDPOINT}/search.json?key=${process.env.API_KEY}&q=${value}`);
+        if (!response.ok) {
+            res.status(response.status).send({
+                error: `failed to fetch auto complete data for ${value}`,
+            });
+        }
+
+        const json = await response.json();
+
+        const cityNamesList: string[] = json.map((obj: any) => obj.name);
+        res.send(cityNamesList);
+
+    } catch (error) {
+        res.sendStatus(500).send({ error: 'Something bad happened' })
+    }
+})
 
 // TODO: add forcast endpoint
 app.get('/forecast/:city', async (req: Request, res: Response) => {
