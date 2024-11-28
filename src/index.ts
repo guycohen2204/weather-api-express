@@ -17,75 +17,99 @@ app.get('/test', (req: Request, res: Response) => {
 
 app.get('/current/:city', async (req: Request, res: Response) => {
 	try {
-        const cityName: string = req.params.city;
-        
-        const response = await fetch(
-            `${ENDPOINT}/current.json?key=${process.env.API_KEY}&q=${cityName}&aqi=yes`
-        );
-        
-        if (!response.ok) {
-            res.status(response.status).send({
-                error: `failed to fetch current weather data for ${cityName}`,
-            });
-        }
-        
-        const json = await response.json();
-        
-        const { location, current } = json;
-        
-        const relevantData = {
-            location: {
-                name: location.name,
-                country: location.country,
-                localTime: location.localtime
-            },
-            current: {
-                temp: current.temp_c,
-                condition: current.condition.text,
-                conditionIcon: current.condition.icon,
-                uvIndex: current.uv,
-                windStatus: current.wind_kph,
-                windDir: current.wind_dir,
-                humidity: current.humidity,
-                visibility: current.vis_km,
-                air_quality: current.air_quality.co,
-            }
-        };
-        res.send(relevantData);
-    } catch (error) {
-        res.sendStatus(500).send({ error: 'Something bad happened' })
-    }
+		const cityName: string = req.params.city;
+
+		const response = await fetch(
+			`${ENDPOINT}/current.json?key=${process.env.API_KEY}&q=${cityName}&aqi=yes`
+		);
+
+		if (!response.ok) {
+			res.status(response.status).send({
+				error: `failed to fetch current weather data for ${cityName}`,
+			});
+		}
+
+		const json = await response.json();
+
+		const { location, current } = json;
+
+		const relevantData = {
+			location: {
+				name: location.name,
+				country: location.country,
+				localTime: location.localtime,
+			},
+			current: {
+				temp: current.temp_c,
+				condition: current.condition.text,
+				conditionIcon: current.condition.icon,
+				uvIndex: current.uv,
+				windStatus: current.wind_kph,
+				windDir: current.wind_dir,
+				humidity: current.humidity,
+				visibility: current.vis_km,
+				air_quality: current.air_quality.co,
+			},
+		};
+		res.send(relevantData);
+	} catch (error) {
+		res.sendStatus(500).send({ error: 'Something bad happened' });
+	}
 });
 
 app.get('/autocomplete/:city', async (req: Request, res: Response) => {
-    try {
-        const value: string = req.params.city;
+	try {
+		const value: string = req.params.city;
 
-        const response = await fetch(`${ENDPOINT}/search.json?key=${process.env.API_KEY}&q=${value}`);
-        if (!response.ok) {
-            res.status(response.status).send({
-                error: `failed to fetch auto complete data for ${value}`,
-            });
-        }
+		const response = await fetch(
+			`${ENDPOINT}/search.json?key=${process.env.API_KEY}&q=${value}`
+		);
+		if (!response.ok) {
+			res.status(response.status).send({
+				error: `failed to fetch auto complete data for ${value}`,
+			});
+		}
 
-        const json = await response.json();
+		const json = await response.json();
 
-        const cityNamesList: string[] = json.map((obj: any) => obj.name);
-        res.send(cityNamesList);
+		const cityNamesList: string[] = json.map((obj: any) => obj.name);
+		res.send(cityNamesList);
+	} catch (error) {
+		res.sendStatus(500).send({ error: 'Something bad happened' });
+	}
+});
 
-    } catch (error) {
-        res.sendStatus(500).send({ error: 'Something bad happened' })
-    }
-})
+app.get('/hourly/:city', async (req: Request, res: Response) => {
+	try {
+		const cityName: string = req.params.city;
 
-// TODO: add forcast endpoint
-app.get('/forecast/:city', async (req: Request, res: Response) => {
-	const cityName: string = req.params.city;
-	const days: number = req.query.days ? +req.query.days : 0;
+		const response = await fetch(
+			`${ENDPOINT}/forecast.json?key=${process.env.API_KEY}&q=${cityName}&days=1&aqi=yes`
+		);
+		if (!response.ok) {
+			res.status(response.status).send({
+				error: `failed to fetch hourly forecast data for ${cityName}`,
+			});
+		}
 
-	const response = await fetch(
-		`${ENDPOINT}/forecast.json?key=${process.env.API_KEY}&q=${cityName}&aqi=yes`
-	);
+		const json = await response.json();
+
+		const { forecast } = json;
+		const { forecastday } = forecast;
+		const { hour } = forecastday[0];
+
+		const hourlyForecast = hour.map((hourObj: any) => {
+			return {
+				time: hourObj.time,
+				temp: hourObj.temp_c,
+				imageUrl: hourObj.condition.icon,
+			};
+		});
+
+		res.send(hourlyForecast);
+	} catch (error) {
+		res.sendStatus(500).send({ error: 'Something bad happened' });
+	}
 });
 
 app.listen(port, () => {
