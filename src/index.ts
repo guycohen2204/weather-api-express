@@ -117,7 +117,7 @@ app.get('/daily/:city', async (req: Request, res: Response) => {
 		const cityName: string = req.params.city;
 
 		const response = await fetch(
-			`${ENDPOINT}/forecast.json?key=${process.env.API_KEY}&q=${cityName}&days=3&aqi=yes`
+			`${ENDPOINT}/forecast.json?key=${process.env.API_KEY}&q=${cityName}&days=7&aqi=yes`
 		);
 		if (!response.ok) {
 			res.status(response.status).send({
