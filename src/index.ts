@@ -38,6 +38,8 @@ app.get('/current/:city', async (req: Request, res: Response) => {
 				name: location.name,
 				country: location.country,
 				localTime: location.localtime,
+				lat: location.lat,
+				lon: location.lon,
 			},
 			current: {
 				temp: current.temp_c,
@@ -94,7 +96,7 @@ app.get('/hourly/:city', async (req: Request, res: Response) => {
 
 		const json = await response.json();
 
-		const { forecast } = json;
+		const { location, forecast } = json;
 		const { forecastday } = forecast;
 		const { hour } = forecastday[0];
 
@@ -106,7 +108,18 @@ app.get('/hourly/:city', async (req: Request, res: Response) => {
 			};
 		});
 
-		res.send(hourlyForecast);
+		const obj = {
+			location: {
+				name: location.name,
+				country: location.country,
+				localTime: location.localtime,
+				lat: location.lat,
+				lon: location.lon,
+			},
+			hourlyForecast,
+		};
+
+		res.send(obj);
 	} catch (error) {
 		res.sendStatus(500).send({ error: 'Something bad happened' });
 	}
