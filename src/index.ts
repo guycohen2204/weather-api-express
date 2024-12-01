@@ -125,6 +125,50 @@ app.get('/hourly/:city', async (req: Request, res: Response) => {
 	}
 });
 
+app.get('/tomorrow/:city', async (req: Request, res: Response) => {
+	try {
+		const cityName: string = req.params.city;
+
+		const response = await fetch(
+			`${ENDPOINT}/forecast.json?key=${process.env.API_KEY}&q=${cityName}&days=2&aqi=yes`
+		);
+		if (!response.ok) {
+			res.status(response.status).send({
+				error: `failed to fetch hourly forecast data for ${cityName}`,
+			});
+		}
+
+		const json = await response.json();
+
+		const { location, forecast } = json;
+		const { forecastday } = forecast;
+		const { hour } = forecastday[1];
+
+		const hourlyForecast = hour.map((hourObj: any) => {
+			return {
+				time: hourObj.time,
+				temp: hourObj.temp_c,
+				imageUrl: hourObj.condition.icon,
+			};
+		});
+
+		const obj = {
+			location: {
+				name: location.name,
+				country: location.country,
+				localTime: location.localtime,
+				lat: location.lat,
+				lon: location.lon,
+			},
+			hourlyForecast,
+		};
+
+		res.send(obj);
+	} catch (error) {
+		res.sendStatus(500).send({ error: 'Something bad happened' });
+	}
+});
+
 app.get('/daily/:city', async (req: Request, res: Response) => {
 	try {
 		const cityName: string = req.params.city;
